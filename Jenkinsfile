@@ -21,7 +21,7 @@ pipeline {
 
     environment {
         AWS_REGION       = 'ap-south-1'
-        AWS_ACCOUNT_ID   = 'YOUR_AWS_ACCOUNT_ID'
+        AWS_ACCOUNT_ID   = '091899373411'
         EKS_CLUSTER_NAME = 'visit-counter-eks'
         K8S_NAMESPACE    = 'visit-counter'
         LOCAL_REGISTRY   = 'localhost:5000'

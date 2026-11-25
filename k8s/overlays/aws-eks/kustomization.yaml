@@ -14,8 +14,8 @@ configMapGenerator:
 # Jenkins dynamically overrides image tags during CI/CD rollout
 images:
   - name: visit-counter-backend
-    newName: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/visit-counter-backend
+    newName: 091899373411.dkr.ecr.ap-south-1.amazonaws.com/visit-counter-backend
     newTag: latest
   - name: visit-counter-frontend
-    newName: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/visit-counter-frontend
+    newName: 091899373411.dkr.ecr.ap-south-1.amazonaws.com/visit-counter-frontend
     newTag: latest

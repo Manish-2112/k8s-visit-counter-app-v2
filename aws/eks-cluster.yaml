@@ -5,7 +5,7 @@ kind: ClusterConfig
 metadata:
   name: visit-counter-eks
   region: ap-south-1
-  version: "1.30"
+  version: "1.36"
 
 iam:
   withOIDC: true
