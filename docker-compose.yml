@@ -1,0 +1,52 @@
+services:
+  postgres-service:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: visitdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d visitdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis-service:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend-service:
+    build: ./backend
+    environment:
+      APP_ENV: docker-compose
+      APP_VERSION: "v2.0.0-local"
+      REDIS_HOST: redis-service
+      REDIS_PORT: 6379
+      POSTGRES_HOST: postgres-service
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: visitdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres-service:
+        condition: service_healthy
+      redis-service:
+        condition: service_healthy
+
+  frontend-service:
+    build: ./frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend-service
+
+volumes:
+  pg_data:

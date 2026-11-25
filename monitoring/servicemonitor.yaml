@@ -1,0 +1,21 @@
+# Apply after installing kube-prometheus-stack via Helm:
+# helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+# helm install monitoring prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: visit-counter-backend-monitor
+  namespace: visit-counter
+  labels:
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  namespaceSelector:
+    matchNames:
+      - visit-counter
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s

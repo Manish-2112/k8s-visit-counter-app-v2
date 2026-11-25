@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>K8s Production Visit Counter & Guestbook</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Kubernetes Production Visit Counter</h1>
+      <p class="subtitle">FastAPI + Redis + PostgreSQL StatefulSet + Nginx + AWS EKS</p>
+    </header>
+
+    <section class="stats-grid">
+      <div class="card highlight">
+        <span class="label">Total Visits (Redis)</span>
+        <strong id="visit-count" class="big-number">...</strong>
+      </div>
+      <div class="card">
+        <span class="label">Served By Backend Pod</span>
+        <code id="pod-name">loading...</code>
+        <div class="badges">
+          <span class="badge env-badge" id="env-badge">env</span>
+          <span class="badge ver-badge" id="ver-badge">version</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button id="refresh-btn" type="button">Refresh Counter (Test Load Balancing)</button>
+    </div>
+
+    <section class="card form-section">
+      <h2>Leave a Persistent Note (PostgreSQL StatefulSet + PVC)</h2>
+      <form id="note-form">
+        <input type="text" id="visitor-name" placeholder="Your name" maxlength="60" required />
+        <textarea id="visitor-message" placeholder="Write a quick note..." maxlength="280" required></textarea>
+        <button type="submit">Post Note</button>
+      </form>
+      <p id="status-msg" class="status-msg"></p>
+    </section>
+
+    <section class="card">
+      <h2>Recent Visitor Notes</h2>
+      <ul id="notes-list" class="notes-list">
+        <li class="empty">Loading notes...</li>
+      </ul>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

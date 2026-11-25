@@ -1,0 +1,33 @@
+# Week 11: AWS CodePipeline / CodeBuild reference equivalent to the Jenkinsfile
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: "ap-south-1"
+    EKS_CLUSTER_NAME: "visit-counter-eks"
+  parameter-store:
+    POSTGRES_USER: "/visit-counter/prod/POSTGRES_USER"
+    POSTGRES_PASSWORD: "/visit-counter/prod/POSTGRES_PASSWORD"
+
+phases:
+  pre_build:
+    commands:
+      - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+      - cd backend && pip install -r requirements.txt && pytest -v && cd ..
+  build:
+    commands:
+      - docker build -t $ECR_REGISTRY/visit-counter-backend:$IMAGE_TAG ./backend
+      - docker build -t $ECR_REGISTRY/visit-counter-frontend:$IMAGE_TAG ./frontend
+      - docker push $ECR_REGISTRY/visit-counter-backend:$IMAGE_TAG
+      - docker push $ECR_REGISTRY/visit-counter-frontend:$IMAGE_TAG
+  post_build:
+    commands:
+      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+      - kubectl apply -k k8s/overlays/aws-eks/
+      - kubectl -n visit-counter set image deployment/backend backend=$ECR_REGISTRY/visit-counter-backend:$IMAGE_TAG
+      - kubectl -n visit-counter set image deployment/frontend frontend=$ECR_REGISTRY/visit-counter-frontend:$IMAGE_TAG
+      - kubectl -n visit-counter rollout status deployment/backend --timeout=180s
+      - kubectl -n visit-counter rollout status deployment/frontend --timeout=180s

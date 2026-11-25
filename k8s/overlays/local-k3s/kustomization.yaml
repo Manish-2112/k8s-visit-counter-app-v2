@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - ingress-traefik.yaml
+
+patches:
+  - path: frontend-nodeport-patch.yaml
+
+configMapGenerator:
+  - name: app-config
+    behavior: merge
+    literals:
+      - APP_ENV=k3s-local
+
+images:
+  - name: visit-counter-backend
+    newName: localhost:5000/visit-counter-backend
+    newTag: latest
+  - name: visit-counter-frontend
+    newName: localhost:5000/visit-counter-frontend
+    newTag: latest
