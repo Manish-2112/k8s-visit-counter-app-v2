@@ -5,8 +5,12 @@ resources:
   - ../../base
   - ingress-alb.yaml
 
+generatorOptions:
+  disableNameSuffixHash: true
+
 configMapGenerator:
   - name: app-config
+    namespace: visit-counter
     behavior: merge
     literals:
       - APP_ENV=aws-eks-production
