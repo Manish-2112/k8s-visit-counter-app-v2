@@ -6,7 +6,6 @@ namespace: visit-counter
 resources:
   - 00-namespace-quotas.yaml
   - 01-configmap.yaml
-  - 02-secret.yaml
   - 03-postgres-statefulset.yaml
   - 04-redis.yaml
   - 05-backend.yaml
