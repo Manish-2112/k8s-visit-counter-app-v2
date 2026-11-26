@@ -4,14 +4,13 @@ import math
 import socket
 import time
 from contextlib import asynccontextmanager
-from typing import List
 
 import psycopg2
-from psycopg2.extras import RealDictCursor
 import redis
 from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel, Field
 
 from app.config import settings
@@ -92,7 +91,7 @@ def init_db(retries: int = 5, delay: int = 2):
             conn.close()
             logger.info("Database schema initialized successfully.")
             return
-        except Exception as exc:
+        except (psycopg2.Error, OSError) as exc:
             logger.warning("DB init attempt %d/%d failed: %s", attempt, retries, exc)
             if attempt < retries:
                 time.sleep(delay)
@@ -170,14 +169,14 @@ def readiness_probe():
     try:
         if get_redis_client().ping():
             status["redis"] = "up"
-    except Exception as exc:
+    except (redis.RedisError, OSError) as exc:
         logger.error("Redis readiness failed: %s", exc)
 
     try:
         conn = get_db_connection()
         conn.close()
         status["postgres"] = "up"
-    except Exception as exc:
+    except (psycopg2.Error, OSError) as exc:
         logger.error("Postgres readiness failed: %s", exc)
 
     if status["redis"] != "up" or status["postgres"] != "up":
@@ -198,10 +197,10 @@ def record_and_get_visits():
 
     try:
         total_visits = get_redis_client().incr("site_visit_count")
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"Redis error: {exc}")
+    except (redis.RedisError, OSError) as exc:
+        raise HTTPException(status_code=503, detail=f"Redis error: {exc}") from exc
 
-    notes: List[dict] = []
+    notes: list[dict] = []
     try:
         conn = get_db_connection()
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
@@ -216,8 +215,8 @@ def record_and_get_visits():
             )
             notes = [dict(row) for row in cur.fetchall()]
         conn.close()
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"PostgreSQL error: {exc}")
+    except (psycopg2.Error, OSError) as exc:
+        raise HTTPException(status_code=503, detail=f"PostgreSQL error: {exc}") from exc
 
     return {
         "total_visits": total_visits,
@@ -249,8 +248,8 @@ def create_note(note: NoteCreate):
         conn.close()
         NOTES_CREATED_TOTAL.inc()
         return created
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"Database write error: {exc}")
+    except (psycopg2.Error, OSError) as exc:
+        raise HTTPException(status_code=503, detail=f"Database write error: {exc}") from exc
 
 
 @app.get("/api/load")
